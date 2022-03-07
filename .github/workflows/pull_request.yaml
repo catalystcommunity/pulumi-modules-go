@@ -1,0 +1,20 @@
+name: Test
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  conventional-commits-pr:
+    if: github.event.pull_request.draft == false
+    name: Validate Conventional Commits PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: crazy-max/ghaction-dump-context@v1
+      - uses: catalystsquad/action-validate-conventional-commits-pr@v1
+  ensure-compile:
+    if: github.event.pull_request.draft == false
+    name: Ensure project compiles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: crazy-max/ghaction-dump-context@v1
+      - uses: catalystsquad/action-compile-go@init
