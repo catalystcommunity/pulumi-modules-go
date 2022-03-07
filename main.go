@@ -7,7 +7,6 @@ import (
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) (err error) {
-		derp
 		// catch any panics and log a nice stack trace, pulumi seems to panic a lot.
 		defer func() {
 			// get the recovered err in case we panicked
