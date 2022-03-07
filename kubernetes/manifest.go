@@ -8,6 +8,11 @@ import (
 	"os"
 )
 
+// SyncKubernetesManifest takes in a pulumi resource name, and a yaml kubernetes manifest as byte array.
+// It writes the manifest to a file, defers deletion of said file, and creates a pulumi config file from it.
+// Pulumi creates the k8s resources from the config file. Recommended use is to store your manifests in yaml file,
+// embed them, template them with pulumi secrets, or variables, and then pass them to this method to sync
+// the kubernetes resource, whatever it may be.
 func SyncKubernetesManifest(ctx *pulumi.Context, pulumiResourceName string, manifest []byte) error {
 	// write bytes to file
 	tempFileName := fmt.Sprintf("/tmp/%s.yaml", pulumiResourceName)
