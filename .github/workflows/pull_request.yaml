@@ -17,4 +17,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: crazy-max/ghaction-dump-context@v1
-      - uses: catalystsquad/action-compile-go@init
+      - uses: catalystsquad/action-compile-go@v1
