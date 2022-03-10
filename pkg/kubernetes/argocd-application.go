@@ -16,6 +16,14 @@ func SyncArgocdApplication(ctx *pulumi.Context, pulumiResourceName string, appli
 	return SyncKubernetesManifest(ctx, pulumiResourceName, bytes, id)
 }
 
+func NewApplicationFromBytes(bytes []byte) (ArgocdApplication, error) {
+	var application ArgocdApplication
+	// marshall template into map[string]interface{}
+	err := yaml.Unmarshal(bytes, &application)
+	errorutils.LogOnErr(nil, "error marshalling template to application", err)
+	return application, err
+}
+
 // ArgocdApplication is a struct that marshalls into valid argocd application yaml. We could use the argo types but we have had
 // problems with the yaml marshalling, and that also requires depending on argo, and nearly the entire k8s api.  This
 // is let DRY and less direct but more simple and straightforward. We'll need to keep this in sync with their spec though.
