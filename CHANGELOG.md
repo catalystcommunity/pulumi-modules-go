@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.0.2...v1.1.0) (2022-03-11)
+
+
+### Features
+
+* func to manage aws auth configmap ([#4](https://github.com/catalystsquad/pulumi-modules-go/issues/4)) ([968fccc](https://github.com/catalystsquad/pulumi-modules-go/commit/968fccc3c9daaf6333158a28a1cd60e18fc53833))
+
 ## [1.0.2](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.0.1...v1.0.2) (2022-03-10)
 
 
