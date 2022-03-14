@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/catalystsquad/pulumi-modules-go/pkg/utils"
+	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/eks"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/iam"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
@@ -22,8 +23,12 @@ type AuthConfigMapInput struct {
 	// added
 	InitialImport bool `json:"initial-import"`
 
-	// required
+	// required if nodegroup IAM role autodiscovery not enabled
 	NodeGroupIamRole string `json:"nodegroup-iam-role"`
+
+	// required if nodegroup IAM role not supplied
+	NodeGroupIamRoleAutoDiscover bool   `json:"nodegroup-iam-role-autodiscover"`
+	EKSClusterName               string `json:"eks-cluster-name"`
 
 	// optional list of AWS SSO permission set roles to autodiscover
 	AutoDiscoverSSORoles []SSORolePermissionSetInput `json:"sso-permission-set-roles"`
@@ -74,9 +79,28 @@ func SyncAuthConfigMap(ctx *pulumi.Context, config AuthConfigMapInput) error {
 	var mapUsers []MapUsersElement
 	authConfigMapData := make(map[string]string)
 
+	var nodeRoleArn string
+	var err error
+	if config.NodeGroupIamRoleAutoDiscover {
+		if config.EKSClusterName != "" {
+			nodeRoleArn, err = discoverNodeIAMRole(ctx, config.EKSClusterName)
+			if err != nil {
+				return err
+			}
+		} else {
+			return errors.New("Node Group IAM Role auto discover enabled, but EKS cluster name not supplied")
+		}
+	} else {
+		if config.NodeGroupIamRole != "" {
+			nodeRoleArn = config.NodeGroupIamRole
+		} else {
+			return errors.New("Node Group IAM Role not supplied, auto discover not enabled")
+		}
+	}
+
 	// add nodegroup iam role to mapRoles
 	mapRoles = append(mapRoles, MapRolesElement{
-		RoleArn:  config.NodeGroupIamRole,
+		RoleArn:  nodeRoleArn,
 		Username: "system:node:{{EC2PrivateDNSName}}",
 		Groups: []string{
 			"system:bootstrappers",
@@ -164,6 +188,28 @@ func SyncAuthConfigMap(ctx *pulumi.Context, config AuthConfigMapInput) error {
 	}
 
 	return nil
+}
+
+// assumes that all nodegroups have the same IAM role, so only finds the first
+// roleArn of the first nodegroup discovered
+func discoverNodeIAMRole(ctx *pulumi.Context, clusterName string) (roleArn string, err error) {
+	nodegroups, err := eks.GetNodeGroups(ctx, &eks.GetNodeGroupsArgs{
+		ClusterName: clusterName,
+	})
+	if err != nil {
+		return
+	}
+
+	nodegroup, err := eks.LookupNodeGroup(ctx, &eks.LookupNodeGroupArgs{
+		ClusterName: clusterName,
+		NodeGroupName: nodegroups.Names[0],
+	})
+	if err != nil {
+		return
+	}
+
+	roleArn = nodegroup.NodeRoleArn
+	return
 }
 
 func discoverSSORole(ctx *pulumi.Context, permissionSetName string) (roleArn string, err error) {
