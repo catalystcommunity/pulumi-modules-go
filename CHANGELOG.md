@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.0...v1.1.1) (2022-03-14)
+
+
+### Bug Fixes
+
+* method for autodiscovering node iam role ([#5](https://github.com/catalystsquad/pulumi-modules-go/issues/5)) ([de20fc9](https://github.com/catalystsquad/pulumi-modules-go/commit/de20fc921cd3db419143180f69a57ef5db70c0be))
+
 # [1.1.0](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.0.2...v1.1.0) (2022-03-11)
 
 
