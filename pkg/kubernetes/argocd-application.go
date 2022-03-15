@@ -2,11 +2,20 @@ package kubernetes
 
 import (
 	"github.com/catalystsquad/app-utils-go/errorutils"
+	"github.com/catalystsquad/pulumi-modules-go/pkg/secrets"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"gopkg.in/yaml.v3"
 )
 
+// SyncArgocdApplication takes in a pulumi resource name, an argocd application, and an optional id (arn, uuid, depends on what the resource is)
+// It will replace secrets in the spec.source.helm.values with the configured secrets provider, then sync the resulting yaml to k8s
 func SyncArgocdApplication(ctx *pulumi.Context, pulumiResourceName string, application ArgocdApplication, id string) error {
+	// replace secrets in values
+	err := ReplaceSecretsInValues(ctx, &application)
+	errorutils.LogOnErr(nil, "error replacing secrets in values", err)
+	if err != nil {
+		return err
+	}
 	// marshall application to yaml
 	bytes, err := yaml.Marshal(application)
 	errorutils.LogOnErr(nil, "error marshalling application to yaml", err)
@@ -16,12 +25,20 @@ func SyncArgocdApplication(ctx *pulumi.Context, pulumiResourceName string, appli
 	return SyncKubernetesManifest(ctx, pulumiResourceName, bytes, id)
 }
 
+// NewApplicationFromBytes transforms yaml formatted byte array into an ArgocdApplication struct
 func NewApplicationFromBytes(bytes []byte) (ArgocdApplication, error) {
 	var application ArgocdApplication
 	// marshall template into map[string]interface{}
 	err := yaml.Unmarshal(bytes, &application)
 	errorutils.LogOnErr(nil, "error marshalling template to application", err)
 	return application, err
+}
+
+// ReplaceSecretsInValues uses a secrets provider to replace templated secret values in the application's helm values string
+func ReplaceSecretsInValues(ctx *pulumi.Context, application *ArgocdApplication) (err error) {
+	values, err := secrets.ReplaceSecrets(ctx, application.Spec.Source.Helm.Values)
+	application.Spec.Source.Helm.Values = values
+	return err
 }
 
 // ArgocdApplication is a struct that marshalls into valid argocd application yaml. We could use the argo types but we have had
