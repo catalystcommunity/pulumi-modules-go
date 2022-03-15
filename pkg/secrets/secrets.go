@@ -5,6 +5,7 @@ import (
 	"github.com/joomcode/errorx"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
+	"strings"
 	"sync"
 )
 
@@ -80,6 +81,8 @@ func ReplaceSecretsFromPulumi(conf *config.Config, source string) (string, error
 		wg := sync.WaitGroup{}
 		wg.Add(1)
 		var secretValue string
+		key = strings.ReplaceAll(key, "<<", "")
+		key = strings.ReplaceAll(key, ">>", "")
 		conf.RequireSecret(key).ApplyT(func(value string) {
 			defer wg.Done()
 			secretValue = value
