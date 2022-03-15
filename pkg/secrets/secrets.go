@@ -83,9 +83,10 @@ func ReplaceSecretsFromPulumi(conf *config.Config, source string) (string, error
 		var secretValue string
 		key = strings.ReplaceAll(key, "<<", "")
 		key = strings.ReplaceAll(key, ">>", "")
-		conf.RequireSecret(key).ApplyT(func(value string) {
+		conf.RequireSecret(key).ApplyT(func(value string) string {
 			defer wg.Done()
 			secretValue = value
+			return value
 		})
 		// wait for apply to set the secret value
 		wg.Wait()
