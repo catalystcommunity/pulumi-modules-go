@@ -22,10 +22,8 @@ github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/blang/semver v3.5.1+incompatible h1:cQNTCjp13qL8KC3Nbxr/y2Bqb63oX6wdnnjpJbkM4JQ=
 github.com/blang/semver v3.5.1+incompatible/go.mod h1:kRBLl5iJ+tD4TcOOxsy/0fnwebNt5EWlYSAyrTnjyyk=
-github.com/catalystsquad/app-utils-go v1.0.1-0.20220315145936-2bf8c0dec367 h1:JZ2K4Zoyx9jh8BvcGXxfeJTLR3KUfzu8UvU2bxmXWEY=
-github.com/catalystsquad/app-utils-go v1.0.1-0.20220315145936-2bf8c0dec367/go.mod h1:dcPir5UyHRVwZAuia48iY56lro+kREbKROzEt0s64is=
-github.com/catalystsquad/app-utils-go v1.0.1-0.20220315203959-cc4ab7c8feee h1:CIymUsP9lf2u0TC5ZwKAkYeaDjvlJzdd5sOexjtgL/o=
-github.com/catalystsquad/app-utils-go v1.0.1-0.20220315203959-cc4ab7c8feee/go.mod h1:dcPir5UyHRVwZAuia48iY56lro+kREbKROzEt0s64is=
+github.com/catalystsquad/app-utils-go v1.0.2 h1:iTfJXqJU+29XbRzjYEJSpWRx/HTUzS4ftsJYTQ2+w2E=
+github.com/catalystsquad/app-utils-go v1.0.2/go.mod h1:dcPir5UyHRVwZAuia48iY56lro+kREbKROzEt0s64is=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/cheggaaa/pb v1.0.18 h1:G/DgkKaBP0V5lnBg/vx61nVxxAU+VqU5yMzSc0f2PPE=
