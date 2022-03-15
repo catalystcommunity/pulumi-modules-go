@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.1...v1.1.2) (2022-03-15)
+
+
+### Bug Fixes
+
+* Add secrets.go which handles secret replacement from various pro… ([#6](https://github.com/catalystsquad/pulumi-modules-go/issues/6)) ([9f51047](https://github.com/catalystsquad/pulumi-modules-go/commit/9f510470d72101a7373b7f11d4e005f97fbbcc41))
+
 ## [1.1.1](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.0...v1.1.1) (2022-03-14)
 
 
