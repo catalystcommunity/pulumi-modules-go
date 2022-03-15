@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-services
+  namespace: argo-cd
+spec:
+  project: default
+  source:
+    repoURL: https://raw.githubusercontent.com/catalystsquad/charts/main
+    chart: platform-services
+    helm:
+      releaseName: platform-services
+      version: v3
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo-cd
