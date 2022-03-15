@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.2...v1.1.3) (2022-03-15)
+
+
+### Bug Fixes
+
+* Added bootstrap method ([#7](https://github.com/catalystsquad/pulumi-modules-go/issues/7)) ([30e0bcf](https://github.com/catalystsquad/pulumi-modules-go/commit/30e0bcf900700e603ce6f1ba9575640f1a1d3fce))
+
 ## [1.1.2](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.1...v1.1.2) (2022-03-15)
 
 
