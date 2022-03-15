@@ -3,7 +3,8 @@ module github.com/catalystsquad/pulumi-modules-go
 go 1.17
 
 require (
-	github.com/catalystsquad/app-utils-go v1.0.0
+	github.com/catalystsquad/app-utils-go v1.0.1-0.20220315145936-2bf8c0dec367
+	github.com/joomcode/errorx v1.1.0
 	github.com/pulumi/pulumi-aws/sdk/v4 v4.38.1
 	github.com/pulumi/pulumi-kubernetes/sdk/v3 v3.16.0
 	github.com/pulumi/pulumi/sdk/v3 v3.25.1
@@ -26,7 +27,6 @@ require (
 	github.com/hashicorp/go-multierror v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
-	github.com/joomcode/errorx v1.1.0 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd // indirect
 	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/mattn/go-runewidth v0.0.8 // indirect
@@ -41,6 +41,7 @@ require (
 	github.com/sabhiram/go-gitignore v0.0.0-20180611051255-d3107576ba94 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/src-d/gcfg v1.4.0 // indirect
