@@ -2,10 +2,8 @@ package kubernetes
 
 import (
 	"github.com/catalystsquad/app-utils-go/errorutils"
-	"github.com/catalystsquad/app-utils-go/logging"
 	"github.com/catalystsquad/pulumi-modules-go/pkg/secrets"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -14,7 +12,6 @@ import (
 func SyncArgocdApplication(ctx *pulumi.Context, pulumiResourceName string, application ArgocdApplication, id string) error {
 	// replace secrets in values
 	err := ReplaceSecretsInValues(ctx, &application)
-	logging.Log.WithFields(logrus.Fields{"values": application.Spec.Source.Helm.Values}).Info("replace secrets complete")
 	errorutils.LogOnErr(nil, "error replacing secrets in values", err)
 	if err != nil {
 		return err
@@ -40,7 +37,6 @@ func NewApplicationFromBytes(bytes []byte) (ArgocdApplication, error) {
 // ReplaceSecretsInValues uses a secrets provider to replace templated secret values in the application's helm values string
 func ReplaceSecretsInValues(ctx *pulumi.Context, application *ArgocdApplication) (err error) {
 	values, err := secrets.ReplaceSecrets(ctx, application.Spec.Source.Helm.Values)
-	logging.Log.WithFields(logrus.Fields{"values": values}).Info("replaced secrets in values")
 	application.Spec.Source.Helm.Values = values
 	return err
 }

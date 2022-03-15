@@ -1,12 +1,10 @@
 package secrets
 
 import (
-	"github.com/catalystsquad/app-utils-go/logging"
 	"github.com/catalystsquad/app-utils-go/templating"
 	"github.com/joomcode/errorx"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-	"github.com/sirupsen/logrus"
 	"strings"
 	"sync"
 )
@@ -88,13 +86,11 @@ func ReplaceSecretsFromPulumi(conf *config.Config, source string) (string, error
 		conf.RequireSecret(key).ApplyT(func(value string) string {
 			defer wg.Done()
 			secretValue = value
-			logging.Log.WithFields(logrus.Fields{"key": key, "secretValue": secretValue, "value": value}).Info("applied secret from pulumi")
 			return value
 		})
 		// wait for apply to set the secret value
 		wg.Wait()
 		// return the secret value
-		logging.Log.WithFields(logrus.Fields{"key": key, "value": secretValue}).Info("got secret after apply")
 		return secretValue, nil
 	})
 }
