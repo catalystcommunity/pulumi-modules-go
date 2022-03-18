@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.4...v1.1.5) (2022-03-18)
+
+
+### Bug Fixes
+
+* delete temp file in the command ([#10](https://github.com/catalystsquad/pulumi-modules-go/issues/10)) ([839aad4](https://github.com/catalystsquad/pulumi-modules-go/commit/839aad47057030bb39d3154da4f3aa94e033fdb1))
+
 ## [1.1.4](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.3...v1.1.4) (2022-03-18)
 
 
