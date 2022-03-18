@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.3...v1.1.4) (2022-03-18)
+
+
+### Bug Fixes
+
+* use command provider to sync aws-auth configmap ([#9](https://github.com/catalystsquad/pulumi-modules-go/issues/9)) ([53edbe9](https://github.com/catalystsquad/pulumi-modules-go/commit/53edbe9ec56130471b9ce0227f47694b797ade40))
+
 ## [1.1.3](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.2...v1.1.3) (2022-03-15)
 
 
