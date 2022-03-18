@@ -89,6 +89,7 @@ var ssoRolePathPrefix string = "/aws-reserved/sso.amazonaws.com/"
 func SyncAuthConfigMap(ctx *pulumi.Context, config AuthConfigMapInput) error {
 	var authConfigMap ConfigMap = ConfigMap{
 		ApiVersion: "v1",
+		Data: map[string]string{},
 		Kind:       "ConfigMap",
 		Metadata: ConfigMapMetadata{
 			Name:      "aws-auth",
