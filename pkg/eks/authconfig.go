@@ -269,14 +269,9 @@ func applyKubernetesManifest(ctx *pulumi.Context, pulumiResourceName string, man
 	if err != nil {
 		return err
 	}
-	// defer file deletion
-	defer func() {
-		err = os.Remove(tempFileName)
-		errorutils.LogOnErr(nil, "error deleting manifest file", err)
-	}()
 	// execute kubectl apply
 	_, err = local.NewCommand(ctx, pulumiResourceName, &local.CommandArgs{
-		Create:   pulumi.String(fmt.Sprintf("kubectl apply -f %s", tempFileName)),
+		Create:   pulumi.String(fmt.Sprintf("kubectl apply -f %s; rm %s", tempFileName, tempFileName)),
 		Triggers: pulumi.ToArrayOutput([]pulumi.Output{pulumi.ToOutput(string(manifest))}),
 	})
 	errorutils.LogOnErr(nil, "error running kubectl apply", err)
