@@ -6,6 +6,7 @@ require (
 	github.com/catalystsquad/app-utils-go v1.0.2
 	github.com/joomcode/errorx v1.1.0
 	github.com/pulumi/pulumi-aws/sdk/v4 v4.38.1
+	github.com/pulumi/pulumi-command/sdk v0.0.3
 	github.com/pulumi/pulumi-kubernetes/sdk/v3 v3.16.0
 	github.com/pulumi/pulumi/sdk/v3 v3.25.1
 	gopkg.in/yaml.v2 v2.2.8
