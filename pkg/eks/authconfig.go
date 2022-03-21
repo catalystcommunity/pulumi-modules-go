@@ -3,12 +3,12 @@ package eks
 import (
 	"errors"
 	"fmt"
-	"github.com/catalystsquad/pulumi-modules-go/pkg/utils"
+	"github.com/catalystsquad/app-utils-go/errorutils"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/eks"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/iam"
-	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
-	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
+	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"os"
 	"strings"
 
 	// use yaml v2 because it uses indentation that matches the default
@@ -72,12 +72,32 @@ type MapUsersElement struct {
 	Username string   `yaml:"username"`
 }
 
+type ConfigMap struct {
+	ApiVersion string            `yaml:"apiVersion"`
+	Data       map[string]string `yaml:"data"`
+	Kind       string            `yaml:"kind"`
+	Metadata   ConfigMapMetadata `yaml:"metadata"`
+}
+
+type ConfigMapMetadata struct {
+	Name      string `yaml:"name"`
+	Namespace string `yaml:"namespace"`
+}
+
 var ssoRolePathPrefix string = "/aws-reserved/sso.amazonaws.com/"
 
 func SyncAuthConfigMap(ctx *pulumi.Context, config AuthConfigMapInput) error {
+	var authConfigMap ConfigMap = ConfigMap{
+		ApiVersion: "v1",
+		Data: map[string]string{},
+		Kind:       "ConfigMap",
+		Metadata: ConfigMapMetadata{
+			Name:      "aws-auth",
+			Namespace: "kube-system",
+		},
+	}
 	var mapRoles []MapRolesElement
 	var mapUsers []MapUsersElement
-	authConfigMapData := make(map[string]string)
 
 	var nodeRoleArn string
 	var err error
@@ -165,7 +185,7 @@ func SyncAuthConfigMap(ctx *pulumi.Context, config AuthConfigMapInput) error {
 	if err != nil {
 		return err
 	}
-	authConfigMapData["mapRoles"] = string(mapRolesBytes)
+	authConfigMap.Data["mapRoles"] = string(mapRolesBytes)
 
 	// omit mapUsers if empty, otherwise import fails
 	if len(mapUsers) != 0 {
@@ -173,21 +193,13 @@ func SyncAuthConfigMap(ctx *pulumi.Context, config AuthConfigMapInput) error {
 		if err != nil {
 			return err
 		}
-		authConfigMapData["mapUsers"] = string(mapUsersBytes)
+		authConfigMap.Data["mapUsers"] = string(mapUsersBytes)
 	}
 
-	_, err = corev1.NewConfigMap(ctx, "aws-auth-configmap", &corev1.ConfigMapArgs{
-		Data: pulumi.ToStringMap(authConfigMapData),
-		Metadata: metav1.ObjectMetaArgs{
-			Name:      pulumi.String("aws-auth"),
-			Namespace: pulumi.String("kube-system"),
-		},
-	}, utils.GetImportOpt("kube-system/aws-auth"))
-	if err != nil {
-		return err
-	}
-
-	return nil
+	// marshal configmap
+	configMapYaml, err := yaml.Marshal(&authConfigMap)
+	applyKubernetesManifest(ctx, "aws-auth-configmap", configMapYaml)
+	return err
 }
 
 // assumes that all nodegroups have the same IAM role, so only finds the first
@@ -201,7 +213,7 @@ func discoverNodeIAMRole(ctx *pulumi.Context, clusterName string) (roleArn strin
 	}
 
 	nodegroup, err := eks.LookupNodeGroup(ctx, &eks.LookupNodeGroupArgs{
-		ClusterName: clusterName,
+		ClusterName:   clusterName,
 		NodeGroupName: nodegroups.Names[0],
 	})
 	if err != nil {
@@ -247,4 +259,21 @@ func removeArnPath(arn string) string {
 func arnToUsername(i string) string {
 	a := strings.Split(i, "/")
 	return a[len(a)-1]
+}
+
+func applyKubernetesManifest(ctx *pulumi.Context, pulumiResourceName string, manifest []byte) error {
+	// write bytes to file
+	tempFileName := fmt.Sprintf("/tmp/%s.yaml", pulumiResourceName)
+	err := os.WriteFile(tempFileName, manifest, 0644)
+	errorutils.LogOnErr(nil, "error writing manifest to file", err)
+	if err != nil {
+		return err
+	}
+	// execute kubectl apply
+	_, err = local.NewCommand(ctx, pulumiResourceName, &local.CommandArgs{
+		Create:   pulumi.String(fmt.Sprintf("kubectl apply -f %s; rm %s", tempFileName, tempFileName)),
+		Triggers: pulumi.ToArrayOutput([]pulumi.Output{pulumi.ToOutput(string(manifest))}),
+	})
+	errorutils.LogOnErr(nil, "error running kubectl apply", err)
+	return err
 }
