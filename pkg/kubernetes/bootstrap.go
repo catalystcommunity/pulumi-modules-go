@@ -69,7 +69,7 @@ func BootstrapCluster(ctx *pulumi.Context) error {
 	}
 
 	// deploy argocd
-	err = deployArgocd(ctx, cfg, k8sConfig, []pulumi.Resource{prometheus})
+	argocd, err := deployArgocd(ctx, cfg, k8sConfig, pulumi.DependsOn([]pulumi.Resource{prometheus})) // this helm chart installs service monitors, so it depends on kube-prometheus-stack
 	errorutils.LogOnErr(nil, "error deploying argocd", err)
 	if err != nil {
 		return err
@@ -81,12 +81,12 @@ func BootstrapCluster(ctx *pulumi.Context) error {
 		return err
 	}
 	// deploy cluster argocd application
-	err = deployPlatformApplicationManifest(ctx)
+	err = deployPlatformApplicationManifest(ctx, pulumi.DependsOn([]pulumi.Resource{argocd})) // depend on argocd for application CRDs
 	errorutils.LogOnErr(nil, "error deploying cluster application manifest", err)
 	return err
 }
 
-func deployArgocd(ctx *pulumi.Context, cfg *config.Config, k8sConfig K8sPlatformConfigInput, dependsOn []pulumi.Resource) error {
+func deployArgocd(ctx *pulumi.Context, cfg *config.Config, k8sConfig K8sPlatformConfigInput, opts ...pulumi.ResourceOption) (pulumi.Resource, error) {
 	// set default helm chart versions if not defined
 	argocdVersion := "3.33.8"
 	if k8sConfig.ArgocdHelm.Version != "" {
@@ -102,7 +102,7 @@ func deployArgocd(ctx *pulumi.Context, cfg *config.Config, k8sConfig K8sPlatform
 	}
 
 	// deploy argo using helm
-	_, err := helm.NewRelease(ctx, "argo-cd", &helm.ReleaseArgs{
+	argocd, err := helm.NewRelease(ctx, "argo-cd", &helm.ReleaseArgs{
 		Chart:           pulumi.String("argo-cd"),
 		Name:            pulumi.String("argo-cd"),
 		Namespace:       pulumi.String("argo-cd"),
@@ -124,8 +124,8 @@ func deployArgocd(ctx *pulumi.Context, cfg *config.Config, k8sConfig K8sPlatform
 					},
 				},
 			}},
-	}, pulumi.DependsOn(dependsOn)) // this helm chart installs service monitors, so it depends on kube-prometheus-stack
-	return err
+	}, opts...)
+	return argocd, err
 }
 
 func deployKubePrometheusStack(ctx *pulumi.Context, cfg K8sPlatformConfigInput) (pulumi.Resource, error) {
@@ -170,7 +170,7 @@ func deployCertManagerDnsSolverSecret(ctx *pulumi.Context) error {
 	return err
 }
 
-func deployPlatformApplicationManifest(ctx *pulumi.Context) error {
+func deployPlatformApplicationManifest(ctx *pulumi.Context, opts ...pulumi.ResourceOption) error {
 	var platformApplicationConfig PlatformApplicationConfig
 	cfg := config.New(ctx, "")
 	cfg.RequireObject("platform-application", &platformApplicationConfig)
@@ -185,7 +185,7 @@ func deployPlatformApplicationManifest(ctx *pulumi.Context) error {
 		application.Spec.Source.TargetRevision = platformApplicationConfig.TargetRevision
 		application.Spec.Source.Helm.Values = platformApplicationConfig.Values
 		// sync
-		err = SyncArgocdApplication(ctx, "cluster-services", application, "")
+		err = SyncArgocdApplication(ctx, "cluster-services", application, opts...)
 		errorutils.LogOnErr(nil, "error syncing cluster application", err)
 	}
 	return nil

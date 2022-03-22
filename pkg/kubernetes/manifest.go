@@ -3,7 +3,6 @@ package kubernetes
 import (
 	"fmt"
 	"github.com/catalystsquad/app-utils-go/errorutils"
-	"github.com/catalystsquad/pulumi-modules-go/pkg/utils"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/yaml"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"os"
@@ -14,7 +13,7 @@ import (
 // Pulumi creates the k8s resources from the config file. Recommended use is to store your manifests in yaml file,
 // embed them, template them with pulumi secrets, or variables, and then pass them to this method to sync
 // the kubernetes resource, whatever it may be.
-func SyncKubernetesManifest(ctx *pulumi.Context, pulumiResourceName string, manifest []byte, id string) error {
+func SyncKubernetesManifest(ctx *pulumi.Context, pulumiResourceName string, manifest []byte, opts ...pulumi.ResourceOption) error {
 	// write bytes to file
 	tempFileName := fmt.Sprintf("/tmp/%s.yaml", pulumiResourceName)
 	err := os.WriteFile(tempFileName, manifest, 0644)
@@ -30,7 +29,7 @@ func SyncKubernetesManifest(ctx *pulumi.Context, pulumiResourceName string, mani
 	// get pulumi configfile from written manifest
 	_, err = yaml.NewConfigFile(ctx, pulumiResourceName, &yaml.ConfigFileArgs{
 		File: tempFileName,
-	}, utils.GetImportOpt(id))
+	}, opts...)
 	errorutils.LogOnErr(nil, "error getting pulumi configfile from manifest file", err)
 	return err
 }
