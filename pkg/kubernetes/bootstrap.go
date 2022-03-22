@@ -74,15 +74,17 @@ func BootstrapCluster(ctx *pulumi.Context) error {
 	if err != nil {
 		return err
 	}
+
 	// deploy cluster argocd application
 	platformApplication, err := deployPlatformApplicationManifest(ctx, pulumi.DependsOn([]pulumi.Resource{argocd})) // depend on argocd for application CRDs
 	errorutils.LogOnErr(nil, "error deploying cluster application manifest", err)
-	// create cert-manager dns secret
-	err = deployCertManagerDnsSolverSecret(ctx, pulumi.DependsOn([]pulumi.Resource{platformApplication}))
-	errorutils.LogOnErr(nil, "error deploying cert manager dns solver secret", err)
 	if err != nil {
 		return err
 	}
+
+	// create cert-manager dns secret
+	err = deployCertManagerDnsSolverSecret(ctx, pulumi.DependsOn([]pulumi.Resource{platformApplication}))
+	errorutils.LogOnErr(nil, "error deploying cert manager dns solver secret", err)
 	return err
 }
 
