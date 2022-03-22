@@ -74,15 +74,15 @@ func BootstrapCluster(ctx *pulumi.Context) error {
 	if err != nil {
 		return err
 	}
+	// deploy cluster argocd application
+	platformApplication, err := deployPlatformApplicationManifest(ctx, pulumi.DependsOn([]pulumi.Resource{argocd})) // depend on argocd for application CRDs
+	errorutils.LogOnErr(nil, "error deploying cluster application manifest", err)
 	// create cert-manager dns secret
-	err = deployCertManagerDnsSolverSecret(ctx)
+	err = deployCertManagerDnsSolverSecret(ctx, pulumi.DependsOn([]pulumi.Resource{platformApplication}))
 	errorutils.LogOnErr(nil, "error deploying cert manager dns solver secret", err)
 	if err != nil {
 		return err
 	}
-	// deploy cluster argocd application
-	err = deployPlatformApplicationManifest(ctx, pulumi.DependsOn([]pulumi.Resource{argocd})) // depend on argocd for application CRDs
-	errorutils.LogOnErr(nil, "error deploying cluster application manifest", err)
 	return err
 }
 
@@ -155,7 +155,7 @@ func deployKubePrometheusStack(ctx *pulumi.Context, cfg K8sPlatformConfigInput) 
 	})
 }
 
-func deployCertManagerDnsSolverSecret(ctx *pulumi.Context) error {
+func deployCertManagerDnsSolverSecret(ctx *pulumi.Context, opts ...pulumi.ResourceOption) error {
 	cfg := config.New(ctx, "")
 	_, err := corev1.NewSecret(ctx, "cert-manager-cloudflare-api-token-secret", &corev1.SecretArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -166,11 +166,11 @@ func deployCertManagerDnsSolverSecret(ctx *pulumi.Context) error {
 			"api-token": cfg.RequireSecret("cloudflareApiToken"),
 		},
 		Type: pulumi.String("Opaque"),
-	})
+	}, opts...)
 	return err
 }
 
-func deployPlatformApplicationManifest(ctx *pulumi.Context, opts ...pulumi.ResourceOption) error {
+func deployPlatformApplicationManifest(ctx *pulumi.Context, opts ...pulumi.ResourceOption) (pulumi.Resource, error) {
 	var platformApplicationConfig PlatformApplicationConfig
 	cfg := config.New(ctx, "")
 	cfg.RequireObject("platform-application", &platformApplicationConfig)
@@ -178,17 +178,18 @@ func deployPlatformApplicationManifest(ctx *pulumi.Context, opts ...pulumi.Resou
 		// get application from template
 		application, err := NewApplicationFromBytes(templates.PlatformApplicationBytes)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		// set variables from stack config
 		application.Spec.SyncPolicy = platformApplicationConfig.SyncPolicy
 		application.Spec.Source.TargetRevision = platformApplicationConfig.TargetRevision
 		application.Spec.Source.Helm.Values = platformApplicationConfig.Values
 		// sync
-		err = SyncArgocdApplication(ctx, "cluster-services", application, opts...)
+		resource, err := SyncArgocdApplication(ctx, "cluster-services", application, opts...)
 		errorutils.LogOnErr(nil, "error syncing cluster application", err)
+		return resource, err
 	}
-	return nil
+	return nil, nil
 }
 
 func stringArrayToAssetOrArchiveArrayOutput(in []string) pulumi.AssetOrArchiveArrayOutput {

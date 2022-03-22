@@ -9,18 +9,18 @@ import (
 
 // SyncArgocdApplication takes in a pulumi resource name, an argocd application, and any pulumi options
 // It will replace secrets in the spec.source.helm.values with the configured secrets provider, then sync the resulting yaml to k8s
-func SyncArgocdApplication(ctx *pulumi.Context, pulumiResourceName string, application ArgocdApplication, opts ...pulumi.ResourceOption) error {
+func SyncArgocdApplication(ctx *pulumi.Context, pulumiResourceName string, application ArgocdApplication, opts ...pulumi.ResourceOption) (pulumi.Resource, error) {
 	// replace secrets in values
 	err := ReplaceSecretsInValues(ctx, &application)
 	errorutils.LogOnErr(nil, "error replacing secrets in values", err)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// marshall application to yaml
 	bytes, err := yaml.Marshal(application)
 	errorutils.LogOnErr(nil, "error marshalling application to yaml", err)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	return SyncKubernetesManifest(ctx, pulumiResourceName, bytes, opts...)
 }
