@@ -69,24 +69,26 @@ func BootstrapCluster(ctx *pulumi.Context) error {
 	}
 
 	// deploy argocd
-	err = deployArgocd(ctx, cfg, k8sConfig, []pulumi.Resource{prometheus})
+	argocd, err := deployArgocd(ctx, cfg, k8sConfig, pulumi.DependsOn([]pulumi.Resource{prometheus})) // this helm chart installs service monitors, so it depends on kube-prometheus-stack
 	errorutils.LogOnErr(nil, "error deploying argocd", err)
 	if err != nil {
 		return err
 	}
-	// create cert-manager dns secret
-	err = deployCertManagerDnsSolverSecret(ctx)
-	errorutils.LogOnErr(nil, "error deploying cert manager dns solver secret", err)
+
+	// deploy cluster argocd application
+	platformApplication, err := deployPlatformApplicationManifest(ctx, pulumi.DependsOn([]pulumi.Resource{argocd})) // depend on argocd for application CRDs
+	errorutils.LogOnErr(nil, "error deploying cluster application manifest", err)
 	if err != nil {
 		return err
 	}
-	// deploy cluster argocd application
-	err = deployPlatformApplicationManifest(ctx)
-	errorutils.LogOnErr(nil, "error deploying cluster application manifest", err)
+
+	// create cert-manager dns secret
+	err = deployCertManagerDnsSolverSecret(ctx, pulumi.DependsOn([]pulumi.Resource{platformApplication}))
+	errorutils.LogOnErr(nil, "error deploying cert manager dns solver secret", err)
 	return err
 }
 
-func deployArgocd(ctx *pulumi.Context, cfg *config.Config, k8sConfig K8sPlatformConfigInput, dependsOn []pulumi.Resource) error {
+func deployArgocd(ctx *pulumi.Context, cfg *config.Config, k8sConfig K8sPlatformConfigInput, opts ...pulumi.ResourceOption) (pulumi.Resource, error) {
 	// set default helm chart versions if not defined
 	argocdVersion := "3.33.8"
 	if k8sConfig.ArgocdHelm.Version != "" {
@@ -102,7 +104,7 @@ func deployArgocd(ctx *pulumi.Context, cfg *config.Config, k8sConfig K8sPlatform
 	}
 
 	// deploy argo using helm
-	_, err := helm.NewRelease(ctx, "argo-cd", &helm.ReleaseArgs{
+	argocd, err := helm.NewRelease(ctx, "argo-cd", &helm.ReleaseArgs{
 		Chart:           pulumi.String("argo-cd"),
 		Name:            pulumi.String("argo-cd"),
 		Namespace:       pulumi.String("argo-cd"),
@@ -124,8 +126,8 @@ func deployArgocd(ctx *pulumi.Context, cfg *config.Config, k8sConfig K8sPlatform
 					},
 				},
 			}},
-	}, pulumi.DependsOn(dependsOn)) // this helm chart installs service monitors, so it depends on kube-prometheus-stack
-	return err
+	}, opts...)
+	return argocd, err
 }
 
 func deployKubePrometheusStack(ctx *pulumi.Context, cfg K8sPlatformConfigInput) (pulumi.Resource, error) {
@@ -155,7 +157,7 @@ func deployKubePrometheusStack(ctx *pulumi.Context, cfg K8sPlatformConfigInput) 
 	})
 }
 
-func deployCertManagerDnsSolverSecret(ctx *pulumi.Context) error {
+func deployCertManagerDnsSolverSecret(ctx *pulumi.Context, opts ...pulumi.ResourceOption) error {
 	cfg := config.New(ctx, "")
 	_, err := corev1.NewSecret(ctx, "cert-manager-cloudflare-api-token-secret", &corev1.SecretArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -166,11 +168,11 @@ func deployCertManagerDnsSolverSecret(ctx *pulumi.Context) error {
 			"api-token": cfg.RequireSecret("cloudflareApiToken"),
 		},
 		Type: pulumi.String("Opaque"),
-	})
+	}, opts...)
 	return err
 }
 
-func deployPlatformApplicationManifest(ctx *pulumi.Context) error {
+func deployPlatformApplicationManifest(ctx *pulumi.Context, opts ...pulumi.ResourceOption) (pulumi.Resource, error) {
 	var platformApplicationConfig PlatformApplicationConfig
 	cfg := config.New(ctx, "")
 	cfg.RequireObject("platform-application", &platformApplicationConfig)
@@ -178,17 +180,18 @@ func deployPlatformApplicationManifest(ctx *pulumi.Context) error {
 		// get application from template
 		application, err := NewApplicationFromBytes(templates.PlatformApplicationBytes)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		// set variables from stack config
 		application.Spec.SyncPolicy = platformApplicationConfig.SyncPolicy
 		application.Spec.Source.TargetRevision = platformApplicationConfig.TargetRevision
 		application.Spec.Source.Helm.Values = platformApplicationConfig.Values
 		// sync
-		err = SyncArgocdApplication(ctx, "cluster-services", application, "")
+		resource, err := SyncArgocdApplication(ctx, "cluster-services", application, opts...)
 		errorutils.LogOnErr(nil, "error syncing cluster application", err)
+		return resource, err
 	}
-	return nil
+	return nil, nil
 }
 
 func stringArrayToAssetOrArchiveArrayOutput(in []string) pulumi.AssetOrArchiveArrayOutput {
