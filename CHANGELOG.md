@@ -1,3 +1,10 @@
+## [1.1.6](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.5...v1.1.6) (2022-03-22)
+
+
+### Bug Fixes
+
+* allow any ResourceOption configuration in SyncKubernetesManifest ([#11](https://github.com/catalystsquad/pulumi-modules-go/issues/11)) ([cf677fb](https://github.com/catalystsquad/pulumi-modules-go/commit/cf677fb8195f1365f69cfd1f3768b9cf2526e4a1))
+
 ## [1.1.5](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.4...v1.1.5) (2022-03-18)
 
 
