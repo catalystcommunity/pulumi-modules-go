@@ -75,8 +75,14 @@ func BootstrapCluster(ctx *pulumi.Context) error {
 		return err
 	}
 
+	// dynamic depends on for an optional resource
+	var prometheusDependsOn pulumi.ResourceOption
+	if prometheusRemoteWriteSecret != nil {
+		prometheusDependsOn = pulumi.DependsOn([]pulumi.Resource{prometheusRemoteWriteSecret})
+	}
+
 	// deploy kube-prometheus-stack, this should happen first because the argo-cd helm chart installs service monitors
-	prometheus, err := deployKubePrometheusStack(ctx, k8sConfig, pulumi.DependsOn([]pulumi.Resource{prometheusRemoteWriteSecret}))
+	prometheus, err := deployKubePrometheusStack(ctx, k8sConfig, prometheusDependsOn)
 	errorutils.LogOnErr(nil, "error deploying kube-prometheus-stack", err)
 	if err != nil {
 		return err
