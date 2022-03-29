@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.6...v1.2.0) (2022-03-29)
+
+
+### Features
+
+* implement management of prometheus remote-write basic auth secret ([#12](https://github.com/catalystsquad/pulumi-modules-go/issues/12)) ([56f7398](https://github.com/catalystsquad/pulumi-modules-go/commit/56f7398ec9601a2a2b6e1844e6cf003e509fc702))
+
 ## [1.1.6](https://github.com/catalystsquad/pulumi-modules-go/compare/v1.1.5...v1.1.6) (2022-03-22)
 
 
