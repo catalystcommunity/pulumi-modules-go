@@ -26,6 +26,13 @@ type K8sPlatformConfigInput struct {
 	// optional, enable management of eks auth config
 	ManageEksAuthConfigMap bool `json:"manage-eks-auth-configmap"`
 
+	// optional, management of prometheus remote write basic auth secret
+	ManagePrometheusRemoteWriteBasicAuthSecret bool `json:"manage-prometheus-remote-write-basic-auth-secret"`
+	// defaults to stack name
+	PrometheusRemoteWriteBasicAuthUsername string `json:"prometheus-remote-write-basic-auth-username"`
+	// defaults to "prometheus-remote-write-basic-auth"
+	PrometheusRemoteWriteSecretName string `json:"prometheus-remote-write-basic-auth-secret-name"`
+
 	// input from eks module
 	KubeConfig pulumi.StringOutput
 }
@@ -61,8 +68,21 @@ func BootstrapCluster(ctx *pulumi.Context) error {
 		}
 	}
 
+	// deploy kube-prometheus-stack remote-write basic auth secret
+	prometheusRemoteWriteSecret, err := deployPrometheusRemoteWriteBasicAuthSecret(ctx, cfg, k8sConfig)
+	errorutils.LogOnErr(nil, "error deploying kube-prometheus-stack remote-write basic auth secret", err)
+	if err != nil {
+		return err
+	}
+
+	// dynamic depends on for an optional resource
+	var prometheusDependsOn pulumi.ResourceOption
+	if prometheusRemoteWriteSecret != nil {
+		prometheusDependsOn = pulumi.DependsOn([]pulumi.Resource{prometheusRemoteWriteSecret})
+	}
+
 	// deploy kube-prometheus-stack, this should happen first because the argo-cd helm chart installs service monitors
-	prometheus, err := deployKubePrometheusStack(ctx, k8sConfig)
+	prometheus, err := deployKubePrometheusStack(ctx, k8sConfig, prometheusDependsOn)
 	errorutils.LogOnErr(nil, "error deploying kube-prometheus-stack", err)
 	if err != nil {
 		return err
@@ -86,6 +106,34 @@ func BootstrapCluster(ctx *pulumi.Context) error {
 	err = deployCertManagerDnsSolverSecret(ctx, pulumi.DependsOn([]pulumi.Resource{platformApplication}))
 	errorutils.LogOnErr(nil, "error deploying cert manager dns solver secret", err)
 	return err
+}
+
+func deployPrometheusRemoteWriteBasicAuthSecret(ctx *pulumi.Context, cfg *config.Config, k8sConfig K8sPlatformConfigInput) (pulumi.Resource, error) {
+	if k8sConfig.ManagePrometheusRemoteWriteBasicAuthSecret {
+		username := ctx.Stack()
+		if k8sConfig.PrometheusRemoteWriteBasicAuthUsername != "" {
+			username = k8sConfig.PrometheusRemoteWriteBasicAuthUsername
+		}
+
+		secretName := "prometheus-remote-write-basic-auth"
+		if k8sConfig.PrometheusRemoteWriteSecretName != "" {
+			secretName = k8sConfig.PrometheusRemoteWriteSecretName
+		}
+
+		secret, err := corev1.NewSecret(ctx, "prometheus-remote-write-basic-auth-secret", &corev1.SecretArgs{
+			Metadata: &metav1.ObjectMetaArgs{
+				Name:      pulumi.String(secretName),
+				Namespace: pulumi.String("kube-prometheus-stack"),
+			},
+			StringData: pulumi.StringMap{
+				"username": pulumi.String(username),
+				"password": cfg.RequireSecret("prometheusRemoteWriteBasicAuthPassword"),
+			},
+		})
+		return secret, err
+	}
+
+	return nil, nil
 }
 
 func deployArgocd(ctx *pulumi.Context, cfg *config.Config, k8sConfig K8sPlatformConfigInput, opts ...pulumi.ResourceOption) (pulumi.Resource, error) {
@@ -130,7 +178,7 @@ func deployArgocd(ctx *pulumi.Context, cfg *config.Config, k8sConfig K8sPlatform
 	return argocd, err
 }
 
-func deployKubePrometheusStack(ctx *pulumi.Context, cfg K8sPlatformConfigInput) (pulumi.Resource, error) {
+func deployKubePrometheusStack(ctx *pulumi.Context, cfg K8sPlatformConfigInput, opts ...pulumi.ResourceOption) (pulumi.Resource, error) {
 	kubePrometheusStackVersion := "33.1.0"
 	if cfg.KubePrometheusStackHelm.Version != "" {
 		kubePrometheusStackVersion = cfg.KubePrometheusStackHelm.Version
@@ -154,7 +202,7 @@ func deployKubePrometheusStack(ctx *pulumi.Context, cfg K8sPlatformConfigInput) 
 			Repo: pulumi.String("https://prometheus-community.github.io/helm-charts"),
 		},
 		ValueYamlFiles: stringArrayToAssetOrArchiveArrayOutput(prometheusValues),
-	})
+	}, opts...)
 }
 
 func deployCertManagerDnsSolverSecret(ctx *pulumi.Context, opts ...pulumi.ResourceOption) error {
