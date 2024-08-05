@@ -1,9 +1,9 @@
-module github.com/catalystsquad/pulumi-modules-go
+module github.com/catalystcommunity/pulumi-modules-go
 
 go 1.17
 
 require (
-	github.com/catalystsquad/app-utils-go v1.0.2
+	github.com/catalystcommunity/app-utils-go v1.0.2
 	github.com/joomcode/errorx v1.1.0
 	github.com/pulumi/pulumi-aws/sdk/v4 v4.38.1
 	github.com/pulumi/pulumi-command/sdk v0.0.3

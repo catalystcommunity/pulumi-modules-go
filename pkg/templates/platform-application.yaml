@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://raw.githubusercontent.com/catalystsquad/charts/main
+    repoURL: https://raw.githubusercontent.com/catalystcommunity/charts/main
     chart: platform-services
     helm:
       releaseName: platform-services

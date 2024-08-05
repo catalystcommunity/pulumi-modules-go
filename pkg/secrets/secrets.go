@@ -1,7 +1,7 @@
 package secrets
 
 import (
-	"github.com/catalystsquad/app-utils-go/templating"
+	"github.com/catalystcommunity/app-utils-go/templating"
 	"github.com/joomcode/errorx"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"

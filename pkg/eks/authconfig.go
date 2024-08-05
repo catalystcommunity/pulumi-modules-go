@@ -3,7 +3,7 @@ package eks
 import (
 	"errors"
 	"fmt"
-	"github.com/catalystsquad/app-utils-go/errorutils"
+	"github.com/catalystcommunity/app-utils-go/errorutils"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/eks"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/iam"
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"

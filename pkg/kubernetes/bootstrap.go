@@ -1,9 +1,9 @@
 package kubernetes
 
 import (
-	"github.com/catalystsquad/app-utils-go/errorutils"
-	"github.com/catalystsquad/pulumi-modules-go/pkg/eks"
-	"github.com/catalystsquad/pulumi-modules-go/pkg/templates"
+	"github.com/catalystcommunity/app-utils-go/errorutils"
+	"github.com/catalystcommunity/pulumi-modules-go/pkg/eks"
+	"github.com/catalystcommunity/pulumi-modules-go/pkg/templates"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"

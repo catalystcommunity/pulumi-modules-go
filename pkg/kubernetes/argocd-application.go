@@ -1,8 +1,8 @@
 package kubernetes
 
 import (
-	"github.com/catalystsquad/app-utils-go/errorutils"
-	"github.com/catalystsquad/pulumi-modules-go/pkg/secrets"
+	"github.com/catalystcommunity/app-utils-go/errorutils"
+	"github.com/catalystcommunity/pulumi-modules-go/pkg/secrets"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"gopkg.in/yaml.v3"
 )
